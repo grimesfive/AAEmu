@@ -16,6 +16,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Compute version
+        shell: powershell
+        run: |
+          $versionBase = "0.3.0"
+          $buildNumber = $env:GITHUB_RUN_NUMBER
+          $version = "$versionBase.$buildNumber"
+          "AAEMU_BASE_VERSION=$versionBase" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "AAEMU_BUILD_NUMBER=$buildNumber" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "AAEMU_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
         with:
@@ -43,5 +52,5 @@ jobs:
         run: |
           dotnet restore
           .\.sonar\scanner\dotnet-sonarscanner begin /k:"aaemulator_aaemu" /o:"aaemulator" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
-          dotnet build --configuration Release --no-restore
+          dotnet build --configuration Release --no-restore /p:AAEmuBaseVersion=${{ env.AAEMU_BASE_VERSION }} /p:AAEmuBuildNumber=${{ env.AAEMU_BUILD_NUMBER }} /p:InformationalVersion=${{ env.AAEMU_VERSION }}
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"

@@ -28,6 +28,16 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+    - name: Compute version
+      run: |
+        VERSION_BASE=0.3.0
+        BUILD_NUMBER=${GITHUB_RUN_NUMBER}
+        VERSION="${VERSION_BASE}.${BUILD_NUMBER}"
+        {
+          echo "AAEMU_BASE_VERSION=${VERSION_BASE}"
+          echo "AAEMU_BUILD_NUMBER=${BUILD_NUMBER}"
+          echo "AAEMU_VERSION=${VERSION}"
+        } >> $GITHUB_ENV
       
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -63,7 +73,7 @@ jobs:
     #   ./location_of_script_within_repo/buildscript.sh
 
     - name: Build
-      run: dotnet build --configuration Release
+      run: dotnet build --configuration Release /p:AAEmuBaseVersion=${{ env.AAEMU_BASE_VERSION }} /p:AAEmuBuildNumber=${{ env.AAEMU_BUILD_NUMBER }} /p:InformationalVersion=${{ env.AAEMU_VERSION }}
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3

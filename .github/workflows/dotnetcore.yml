@@ -14,6 +14,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Compute version
+        run: |
+          VERSION_BASE=0.3.0
+          BUILD_NUMBER=${GITHUB_RUN_NUMBER}
+          VERSION="${VERSION_BASE}.${BUILD_NUMBER}"
+          {
+            echo "AAEMU_BASE_VERSION=${VERSION_BASE}"
+            echo "AAEMU_BUILD_NUMBER=${BUILD_NUMBER}"
+            echo "AAEMU_VERSION=${VERSION}"
+          } >> $GITHUB_ENV
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -21,13 +31,13 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build --configuration Release --no-restore /p:AAEmuBaseVersion=${{ env.AAEMU_BASE_VERSION }} /p:AAEmuBuildNumber=${{ env.AAEMU_BUILD_NUMBER }} /p:InformationalVersion=${{ env.AAEMU_VERSION }}
       # - name: Scripts Compile Net 8
       #    run: dotnet run --project AAEmu.Game/AAEmu.Game.csproj --framework net8.0 compiler-check
       - name: Scripts Compile Net 9
-        run: dotnet run --project AAEmu.Game/AAEmu.Game.csproj --framework net9.0 compiler-check
+        run: dotnet run /p:AAEmuBaseVersion=${{ env.AAEMU_BASE_VERSION }} /p:AAEmuBuildNumber=${{ env.AAEMU_BUILD_NUMBER }} /p:InformationalVersion=${{ env.AAEMU_VERSION }} --project AAEmu.Game/AAEmu.Game.csproj --framework net9.0 compiler-check
       - name: Test
-        run: dotnet test --filter FullyQualifiedName!~AAEmu.IntegrationTests /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov
+        run: dotnet test --filter FullyQualifiedName!~AAEmu.IntegrationTests /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov /p:AAEmuBaseVersion=${{ env.AAEMU_BASE_VERSION }} /p:AAEmuBuildNumber=${{ env.AAEMU_BUILD_NUMBER }} /p:InformationalVersion=${{ env.AAEMU_VERSION }}
       - name: Coveralls GitHub Action
         uses: coverallsapp/github-action@v2
         with:

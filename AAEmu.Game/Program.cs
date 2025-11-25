@@ -25,6 +25,7 @@ public static class Program
     private static DateTime _startTime;
     private static string Name => Assembly.GetExecutingAssembly().GetName().Name;
     private static string Version => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "???";
+    private static string InformationalVersion => Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? Version;
     public static AutoResetEvent ShutdownSignal => new(false); // TODO save to shutdown server?
 
     public static int UpTime => (int)(DateTime.UtcNow - _startTime).TotalSeconds;
@@ -138,7 +139,7 @@ public static class Program
     {
         _thread.Name = "AA.Game Base Thread";
         _startTime = DateTime.UtcNow;
-        Logger.Info($"{Name} version {Version}");
+        Logger.Info($"{Name} version {InformationalVersion} (assembly {Version})");
         Logger.Info($"Running as {(Environment.Is64BitProcess ? "64" : "32")}-bits on {(Environment.Is64BitOperatingSystem ? "64" : "32")}-bits {GetOsName()} ({Environment.OSVersion})");
         if (!Environment.Is64BitProcess)
         {
@@ -215,6 +216,6 @@ public static class Program
     private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         var exceptionStr = e.ExceptionObject.ToString();
-        Logger.Fatal(exceptionStr);
+        Logger.Fatal($"{exceptionStr} (version {InformationalVersion})");
     }
 }
